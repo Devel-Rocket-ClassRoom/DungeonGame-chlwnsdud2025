@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace DungeonGame
 {
+
+    
     public interface IMonster
     {
 
@@ -47,7 +49,7 @@ namespace DungeonGame
         public bool P_isDead = false;
         public Player()
         {
-            lifeCount = 30;
+            lifeCount = 150;
             attackDamage = 50;
         }
         override public void Spawn(int row, int col, char[,] map)
@@ -75,7 +77,7 @@ namespace DungeonGame
                 {
                     if (monsterGroup[i].row_Location == x && monsterGroup[i].col_Location == y)
                     {
-                        bool M_isDead = P_Attack(map, monsterGroup[i]);
+                        bool M_isDead = Player_Attack(map, monsterGroup[i]);
                         if (M_isDead)
                         {
                             monsterGroup.RemoveAt(i);
@@ -120,7 +122,7 @@ namespace DungeonGame
                 return true;
             }
         }
-        public bool P_Attack(char[,] map, Monster monster)
+        public bool Player_Attack(char[,] map, Monster monster)
         {
             return monster.Damaged(attackDamage);
         }
@@ -161,7 +163,7 @@ namespace DungeonGame
         {
             Console.WriteLine("Monster 사망");
         }
-        public int Count_M(List<Monster> monsters)
+        public int Count_Monster(List<Monster> monsters)
         {
             int MonsterLocation = 0;
 
@@ -171,14 +173,14 @@ namespace DungeonGame
             }
             return MonsterLocation;
         }
-        public void Attack_Move_Monster(char[,] map, int turncount, Player player)
+        public void Attack_OR_Move_Monster(char[,] map, int turncount, Player player)
         {
             (int, int) PlayerLoc = player.Current_Location(map, 'P');
             if (turncount % 2 == 0)
             {
                 //공격턴
 
-                M_Attack(map, PlayerLoc, player);
+                Monster_Attack(map, PlayerLoc, player);
             }
             else if (turncount % 2 == 1)
             {
@@ -187,16 +189,16 @@ namespace DungeonGame
 
                 if (Check_Player(map, PlayerLoc, chasingRange))
                 {
-                    M_Move_Player(map, PlayerLoc);
+                    Monster_Move_To_Player(map, PlayerLoc);
                 }
                 else
                 {
-                    M_Random_Move(map);
+                    Monster_Random_Move(map);
                 }
             }
 
         }//턴에 따라 Attack OR Move
-        private void M_Attack(char[,] map, (int, int) PlayerLoc, Player player)
+        private void Monster_Attack(char[,] map, (int, int) PlayerLoc, Player player)
         {
             if (Check_Player(map, PlayerLoc, attackRange))
             {
@@ -209,7 +211,7 @@ namespace DungeonGame
 
             }
         }
-        private void M_Random_Move(char[,] map)//상하좌우 랜덤위치 이동
+        private void Monster_Random_Move(char[,] map)//상하좌우 랜덤위치 이동
         {
 
             int a = rand.Next(1, 5);
@@ -257,7 +259,7 @@ namespace DungeonGame
 
         }
 
-        private void M_Move_Player(char[,] map, (int, int) playerLoc)
+        private void Monster_Move_To_Player(char[,] map, (int, int) playerLoc)
         {
 
             if (playerLoc.Item1 > row_Location)
@@ -320,6 +322,26 @@ namespace DungeonGame
         public List<char[,]> totalMap = new List<char[,]>();
         public int mapcount = 0;
 
+        public void NewMap(char[,] map)
+        {
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                for (int j = 0; j < map.GetLength(1); j++)
+                {
+                    if (i == 0 || i == map.GetLength(0) - 1 || j == 0 || j == map.GetLength(1) - 1)
+                    {
+                        map[i, j] = '#';
+                    }
+                    else
+                    {
+                        map[i, j] = ' ';
+                    }
+                }
+
+            }
+        }
+
+        
         public char[,] CreateMap(string Level, List<Monster> monsterG, Player player)
         {
             //랜덤 크기의 맵 생성
@@ -354,22 +376,9 @@ namespace DungeonGame
 
 
             char[,] map = new char[mapsizer, mapsizec];
+            NewMap(map);
 
-            for (int i = 0; i < map.GetLength(0); i++)
-            {
-                for (int j = 0; j < map.GetLength(1); j++)
-                {
-                    if (i == 0 || i == map.GetLength(0) - 1 || j == 0 || j == map.GetLength(1) - 1)
-                    {
-                        map[i, j] = '#';
-                    }
-                    else
-                    {
-                        map[i, j] = ' ';
-                    }
-                }
 
-            }
 
             //맵 내부 벽 랜덤 스폰
             Wall_Generator(map, wallCount);
@@ -409,7 +418,7 @@ namespace DungeonGame
         {
             for (int count = 0; count < wallCount; count++)
             {
-                while (true)
+                while (true)// 함수로 만들기!
                 {
                     Random rand = new Random();
 
@@ -489,7 +498,7 @@ namespace DungeonGame
         {
 
         }
-        public void SetGame()
+        public void Init_Game()
         {
             Console.Write("난이도 입력(Easy, Normal, Hard): ");
 
@@ -515,7 +524,7 @@ namespace DungeonGame
         public void PlayGame()
         {
 
-            SetGame();
+            Init_Game();
 
             char[,] Map2 = mapManager.CreateMap(Level, monsterGroup, player);
             mapManager.totalMap.Add(Map2);
@@ -593,7 +602,7 @@ namespace DungeonGame
             //몬스터 행동
             for (int i = 0; i < monsterGroup.Count; i++)
             {
-                monsterGroup[i].Attack_Move_Monster(map, turnCount, player);
+                monsterGroup[i].Attack_OR_Move_Monster(map, turnCount, player);
             }
 
             //업데이트
@@ -605,7 +614,7 @@ namespace DungeonGame
             else if (moveResult == 3)
             {
 
-                if (moster.Count_M(monsterGroup) == 0)
+                if (moster.Count_Monster(monsterGroup) == 0)
                 {
                     mapManager.Door_Generate(map);
                     mapManager.PrintMap(map);
@@ -614,7 +623,7 @@ namespace DungeonGame
                 else
                 {
                     mapManager.PrintMap(map);
-                    Console.WriteLine("남은 적 수 : " + moster.Count_M(monsterGroup));
+                    Console.WriteLine("남은 적 수 : " + moster.Count_Monster(monsterGroup));
                 }
             }
             else if (moveResult == 4)
