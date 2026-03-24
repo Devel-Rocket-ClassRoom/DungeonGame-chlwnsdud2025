@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 namespace DungeonGame
 {
-
-    
     public interface IMonster
     {
 
