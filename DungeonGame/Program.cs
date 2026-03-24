@@ -637,8 +637,8 @@ namespace DungeonGame
             }
 
             //다음 턴 예고
-            if (turnCount % 3 == 0) { Console.WriteLine("다음턴은 몬스터 이동 턴!"); }
-            else { Console.WriteLine("다음턴은 몬스터 공격 턴!"); }
+            if (turnCount % 3 == 2) { Console.WriteLine("다음턴은 몬스터 공격 턴!"); }
+            else { Console.WriteLine("다음턴은 몬스터 이동 턴!"); }
 
             return 0;
         }
@@ -648,7 +648,6 @@ namespace DungeonGame
         static void Main(string[] args)
         {
             Console.CursorVisible = false;
-
 
             DungeonGame a = new DungeonGame();
             a.PlayGame();
