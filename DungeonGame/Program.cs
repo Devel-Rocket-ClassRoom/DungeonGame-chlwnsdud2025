@@ -176,13 +176,13 @@ namespace DungeonGame
         public void Attack_OR_Move_Monster(char[,] map, int turncount, Player player)
         {
             (int, int) PlayerLoc = player.Current_Location(map, 'P');
-            if (turncount % 2 == 0)
+            if (turncount % 3 == 0)
             {
                 //공격턴
 
                 Monster_Attack(map, PlayerLoc, player);
             }
-            else if (turncount % 2 == 1)
+            else if (turncount % 3 != 0)
             {
 
                 //움직이는 턴
@@ -637,8 +637,8 @@ namespace DungeonGame
             }
 
             //다음 턴 예고
-            if (turnCount % 2 == 1) { Console.WriteLine("다음턴은 몬스터 공격 턴!"); }
-            else { Console.WriteLine("다음턴은 몬스터 이동 턴!"); }
+            if (turnCount % 3 == 0) { Console.WriteLine("다음턴은 몬스터 이동 턴!"); }
+            else { Console.WriteLine("다음턴은 몬스터 공격 턴!"); }
 
             return 0;
         }
