@@ -1,26 +1,41 @@
-﻿using System.Text.Json;
+﻿using DungeonGame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using static DungeonGame.SaveLoadJson;
+
+
+
 
 namespace DungeonGame
 {
+
     public interface IMonster
     {
 
 
     }
+    public enum Move_Result
+    {
+        Door,
+        Back,
+        Monster,
+        Wall,
+        Move
+    }
     abstract public class Character
     {
-        public int row_Location;
-        public int col_Location;
+        public int row_Location { get; set; }
+        public int col_Location { get; set; }
 
-        public int lifeCount;
-        public int attackDamage;
-        public string name;
-        
+        public int lifeCount { get; set; }
+        public int attackDamage { get; set; }
+        public string name { get; set; }
+
 
         public (int, int) Current_Location(char[,] map, char c)
         {
@@ -125,6 +140,8 @@ namespace DungeonGame
             return monster.Damaged(attackDamage);
         }
     }
+
+    
     public class Monster : Character, IMonster
     {
         static Random rand = new Random();
@@ -132,7 +149,11 @@ namespace DungeonGame
         private int chasingRange = 10;
         private int attackRange = 1;
         private int percent = 50;
-        public Monster() { }
+        public Monster() 
+        {
+            lifeCount = 100;
+            attackDamage = 3;
+        }
 
         override public bool Damaged(int damage)
         {
@@ -154,8 +175,6 @@ namespace DungeonGame
 
             row_Location = row;
             col_Location = col;
-            lifeCount = 100;
-            attackDamage = 3;
         }//생성 및 세팅(체력, 공격력 등)
         override public void Died()
         {
@@ -314,6 +333,8 @@ namespace DungeonGame
             }
             return false;
         }
+   
+    
     }
     public class MapController
     {
@@ -492,6 +513,12 @@ namespace DungeonGame
         List<Monster> monsterGroup = new List<Monster>();
         Monster moster = new Monster();
 
+        public List<List<char>> list { get; set; }
+       
+
+
+
+
         public DungeonGame()
         {
 
@@ -640,6 +667,140 @@ namespace DungeonGame
 
             return 0;
         }
+
+
+
+        public void testJson()
+        {
+            list = new List<List<char>>();
+
+            char[,] map = new char[10, 10];
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                for (int j = 0; j < map.GetLength(1); j++)
+                {
+                    if (i == 0 || i == map.GetLength(0) - 1 || j == 0 || j == map.GetLength(1) - 1)
+                    {
+                        map[i, j] = '#';
+                    }
+                    else
+                    {
+                        map[i, j] = ' ';
+                    }
+                }
+
+            }
+
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                var row = new List<char>();
+                for (int j = 0; j < map.GetLength(1); j++)
+                {
+                    row.Add(map[i, j]);
+                }
+                list.Add(row);
+            }
+
+        }
+    }
+
+
+
+    public class SaveLoadJson
+    {
+        // 2차원 맵을 List로 바꾸는 함수
+        public List<List<char>> ConvertMap1(char[,] map)
+        {
+            var list = new List<List<char>>();
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                var row = new List<char>();
+                for (int j = 0; j < map.GetLength(1); j++)
+                {
+                    row.Add(map[i, j]);
+                }
+                list.Add(row);
+            }
+
+            return list;
+        }
+
+        // 2차원 맵을 char[][]로 바꾸는 함수
+        public char[][] ConvertMap2(char[,] map)
+        {
+            int rows = map.GetLength(0);
+            int cols = map.GetLength(1);
+            char[][] result = new char[rows][];
+
+            for (int i = 0; i < rows; i++)
+            {
+                result[i] = new char[cols];
+                for (int j = 0; j < cols; j++)
+                {
+                    result[i][j] = map[i, j];
+                }
+            }
+
+            return result;
+        }
+
+        // GameData를 Json으로 저장하는 테스트 함수
+        public void SaveGameData()
+        {
+            GameData gdata = new GameData("Blue dragon", 5, 10);
+
+            // 저장할 파일 경로
+            string folderPath = "./GameData";
+            string filePath = Path.Combine(folderPath, "data.json");  // 폴더와 파일 이름 합치기
+
+            // 폴더가 존재하지 않을 경우 생성
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            // 직렬화
+            string result = JsonSerializer.Serialize(gdata, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(filePath, result);
+
+            // 테스트 출력
+            Console.WriteLine(result);
+        }
+
+        // Json으로 저장된 GameData를 읽는 테스트 함수
+        public void LoadGameData()
+        {
+            string folderPath = "./GameData";
+            string filePath = Path.Combine(folderPath, "data.json");  // 폴더와 파일 이름 합치기
+
+            // 역직렬화
+            string s = File.ReadAllText(filePath);
+            GameData mm = JsonSerializer.Deserialize<GameData>(s);
+
+            if (mm != null)
+            {
+                Console.WriteLine("읽기 성공!: " + mm);
+            }
+            else
+            {
+                Console.WriteLine("정상적인 데이터가 아닙니다.");
+            }
+        }
+
+        public class GameData
+        {
+            // Json에 포함
+            [JsonInclude] private string stageName;
+            [JsonInclude] private int dungeonCount;
+
+            // 포함하지 않음
+            [JsonIgnore] public int Count { get; set; }
+
+            public GameData(string stageName, int dungeonCount, int count)
+            {
+                this.stageName = stageName;
+                this.dungeonCount = dungeonCount;
+                this.Count = count;
+            }
+        }
     }
     internal class Program
     {
@@ -649,6 +810,43 @@ namespace DungeonGame
 
             DungeonGame a = new DungeonGame();
             a.PlayGame();
+
+
+
+
+            //a.testJson();
+
+
+            /*
+            Monster m = new Monster();
+            Console.Write("몬스터 이름 입력: ");
+            m.name = Console.ReadLine();
+
+            string folderPath = "./GameData";
+            string filePath = Path.Combine(folderPath, "data.json");
+
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+            }
+            string result = JsonSerializer.Serialize(m, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(filePath, result);
+
+            Console.WriteLine("Json으로 변환된 문자열 : \n" + result);
+            Console.ReadLine();
+
+            string s = File.ReadAllText(filePath);
+            Monster mm = JsonSerializer.Deserialize<Monster>(s);
+            Console.WriteLine("읽기 성공 : " + mm.name);
+        */
+
+            //SaveLoadJson a = new SaveLoadJson();
+            //a.SaveGameData();
+            //a.LoadGameData();
+
+
+
+
         }
     }
 }
