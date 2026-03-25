@@ -710,7 +710,28 @@ namespace DungeonGame
 
     public class SaveLoadJson
     {
+        List<List<char>> test_map;
+        public char[,] map = new char[20,20];
         // 2차원 맵을 List로 바꾸는 함수
+        public void MapGenerate()
+        {
+            for (int i = 0; i < map.GetLength(0); i++)
+            {
+                for (int j = 0; j < map.GetLength(1); j++)
+                {
+                    if (i == 0 || i == map.GetLength(0) - 1 || j == 0 || j == map.GetLength(1) - 1)
+                    {
+                        map[i, j] = '#';
+                    }
+                    else
+                    {
+                        map[i, j] = ' ';
+                    }
+                }
+
+            }
+            test_map = ConvertMap1(map);
+        }
         public List<List<char>> ConvertMap1(char[,] map)
         {
             var list = new List<List<char>>();
@@ -749,7 +770,7 @@ namespace DungeonGame
         // GameData를 Json으로 저장하는 테스트 함수
         public void SaveGameData()
         {
-            GameData gdata = new GameData("Blue dragon", 5, 10);
+            GameData gdata = new GameData("Blue dragon", 5, 10, test_map);
 
             // 저장할 파일 경로
             string folderPath = "./GameData";
@@ -792,15 +813,17 @@ namespace DungeonGame
             // Json에 포함
             [JsonInclude] private string stageName;
             [JsonInclude] private int dungeonCount;
+            [JsonInclude] private List<List<char>> testMap;
 
             // 포함하지 않음
             [JsonIgnore] public int Count { get; set; }
 
-            public GameData(string stageName, int dungeonCount, int count)
+            public GameData(string stageName, int dungeonCount, int count, List<List<char>> testMap)
             {
                 this.stageName = stageName;
                 this.dungeonCount = dungeonCount;
                 this.Count = count;
+                this.testMap = testMap;
             }
         }
     }
@@ -808,10 +831,10 @@ namespace DungeonGame
     {
         static void Main(string[] args)
         {
-            Console.CursorVisible = false;
+            //Console.CursorVisible = false;
 
-            DungeonGame a = new DungeonGame();
-            a.PlayGame();
+            //DungeonGame a = new DungeonGame();
+            //a.PlayGame();
 
 
 
@@ -841,10 +864,11 @@ namespace DungeonGame
             Monster mm = JsonSerializer.Deserialize<Monster>(s);
             Console.WriteLine("읽기 성공 : " + mm.name);
         */
-
-            //SaveLoadJson a = new SaveLoadJson();
-            //a.SaveGameData();
-            //a.LoadGameData();
+            
+            SaveLoadJson a = new SaveLoadJson();
+            a.MapGenerate();
+            a.SaveGameData();
+            a.LoadGameData();
 
 
 
