@@ -33,6 +33,8 @@ namespace DungeonGame
         public int attackDamage { get; set; }
         public string name { get; set; }
 
+        public char mark;
+
 
         public (int, int) Current_Location(char[,] map, char c)
         {
@@ -61,10 +63,11 @@ namespace DungeonGame
         {
             lifeCount = 150;
             attackDamage = 50;
+            mark = 'P';
         }
         override public void Spawn(int row, int col, char[,] map)
         {
-            map[row, col] = 'P';
+            map[row, col] = mark;
             row_Location = row;
             col_Location = col;
 
@@ -80,7 +83,7 @@ namespace DungeonGame
             {
                 return Move_Result.Wall; // 벽에 막힘
             }
-            else if (map[x, y] == 'M')
+            else if (map[x, y] == 'M' || map[x, y] == 'B')
             {
                 Console.WriteLine("Player : 몬스터 공격!!");
                 for (int i = 0; i < monsterGroup.Count; i++)
@@ -114,7 +117,7 @@ namespace DungeonGame
             else
             {
                 map[x + xamount, y + yamount] = ' ';
-                map[x, y] = 'P';
+                map[x, y] = mark;
                 return Move_Result.Move; // 일반 이동 성공
             }
         }
@@ -150,6 +153,7 @@ namespace DungeonGame
         {
             lifeCount = 100;
             attackDamage = 3;
+            mark = 'M';
         }
 
         override public bool Damaged(int damage)
@@ -168,11 +172,11 @@ namespace DungeonGame
         }
         override public void Spawn(int row, int col, char[,] map)
         {
-            map[row, col] = 'M';
+            map[row, col] = mark;
 
             row_Location = row;
             col_Location = col;
-        }//생성 및 세팅(체력, 공격력 등)
+        }
         override public void Died()
         {
             Console.WriteLine("Monster 사망");
@@ -236,7 +240,7 @@ namespace DungeonGame
                 {
                     map[row_Location, col_Location] = ' ';
                     row_Location++;
-                    map[row_Location, col_Location] = 'M';
+                    map[row_Location, col_Location] = mark;
                 }
             }
             else if (a == 2)
@@ -246,7 +250,7 @@ namespace DungeonGame
                 {
                     map[row_Location, col_Location] = ' ';
                     row_Location--;
-                    map[row_Location, col_Location] = 'M';
+                    map[row_Location, col_Location] = mark;
                 }
             }
             else if (a == 3)
@@ -256,7 +260,7 @@ namespace DungeonGame
                 {
                     map[row_Location, col_Location] = ' ';
                     col_Location++;
-                    map[row_Location, col_Location] = 'M';
+                    map[row_Location, col_Location] = mark;
                 }
             }
             else if (a == 4)
@@ -266,7 +270,7 @@ namespace DungeonGame
                 {
                     map[row_Location, col_Location] = ' ';
                     col_Location--;
-                    map[row_Location, col_Location] = 'M';
+                    map[row_Location, col_Location] = mark;
                 }
             }
             else { }
@@ -283,7 +287,7 @@ namespace DungeonGame
                 {
                     map[row_Location, col_Location] = ' ';
                     row_Location++;
-                    map[row_Location, col_Location] = 'M';
+                    map[row_Location, col_Location] = mark;
                 }
             }
             else if (playerLoc.Item1 < row_Location)
@@ -293,7 +297,7 @@ namespace DungeonGame
                 {
                     map[row_Location, col_Location] = ' ';
                     row_Location--;
-                    map[row_Location, col_Location] = 'M';
+                    map[row_Location, col_Location] = mark;
                 }
             }
 
@@ -304,7 +308,7 @@ namespace DungeonGame
                 {
                     map[row_Location, col_Location] = ' ';
                     col_Location++;
-                    map[row_Location, col_Location] = 'M';
+                    map[row_Location, col_Location] = mark;
                 }
             }
             else if (playerLoc.Item2 < col_Location)
@@ -314,7 +318,7 @@ namespace DungeonGame
                 {
                     map[row_Location, col_Location] = ' ';
                     col_Location--;
-                    map[row_Location, col_Location] = 'M';
+                    map[row_Location, col_Location] = mark;
                 }
             }
 
@@ -330,8 +334,17 @@ namespace DungeonGame
             }
             return false;
         }
-   
-    
+    }
+    public class Boss : Monster
+    {
+        public Boss()
+        {
+            lifeCount = 300;
+            attackDamage = 10;
+            mark = 'B';
+        }
+
+       
     }
     public class MapController
     {
@@ -358,7 +371,7 @@ namespace DungeonGame
         }
 
         
-        public char[,] CreateMap(string Level, List<Monster> monsterG, Player player)
+        public char[,] CreateMap(string Level, List<Monster> monsterG, Player player, int stage_count)
         {
             //랜덤 크기의 맵 생성
             Random randmap = new Random();
@@ -395,18 +408,32 @@ namespace DungeonGame
             NewMap(map);
 
 
+            //몬스터 랜덤 위치 스폰
+            MonsterSpawn(map, monsterG, stage_count, enemyCount, mapsizer, mapsizec);
 
             //맵 내부 벽 랜덤 스폰
             Wall_Generator(map, wallCount);
 
 
             //플레이어 고정 위치 스폰
-
             player.Spawn(1, 1, map);
 
-            //몬스터 랜덤 위치 스폰
+
+            return map;
+        }
+
+        public void MonsterSpawn(char[,] map, List<Monster> monsterG, int stage_count, int enemyCount, int mapsizer, int mapsizec)
+        {
             Random rand = new Random();
             monsterG.Clear();
+
+            if (mapcount == stage_count - 1)
+            {
+                Boss newB = new Boss();
+                newB.Spawn(map.GetLength(0) -2, map.GetLength(1) - 2, map);
+                monsterG.Add(newB);
+            }
+
 
             for (int i = 0; i < enemyCount; i++)
             {
@@ -427,8 +454,6 @@ namespace DungeonGame
                 monsterG.Add(newM);
 
             }
-
-            return map;
         }
         public void Wall_Generator(char[,] map, int wallCount)
         {
@@ -509,6 +534,7 @@ namespace DungeonGame
         List<Monster> monsterGroup = new List<Monster>();
         Monster moster = new Monster();
         SaveLoadJson JsonMap = new SaveLoadJson();
+        
 
         public List<List<char>> list { get; set; }
         public DungeonGame()
@@ -543,7 +569,7 @@ namespace DungeonGame
 
             Init_Game();
 
-            char[,] Map2 = mapManager.CreateMap(Level, monsterGroup, player);
+            char[,] Map2 = mapManager.CreateMap(Level, monsterGroup, player, stage_count);
             mapManager.totalMap.Add(Map2);
             JsonMap.test_map = JsonMap.ConvertMap1(Map2);
             JsonMap.SaveGameData(JsonMap.test_map);
@@ -642,7 +668,9 @@ namespace DungeonGame
                 if (mapManager.mapcount >= mapManager.totalMap.Count()) //List에 저장안된맵은 저장
                 {
 
-                    map = mapManager.CreateMap(Level, monsterGroup, player);
+                    map = mapManager.CreateMap(Level, monsterGroup, player, stage_count);
+
+                    
                     mapManager.totalMap.Add(map);
 
                     JsonMap.test_map = JsonMap.ConvertMap1(map);
