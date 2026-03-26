@@ -148,7 +148,7 @@ namespace DungeonGame
 
         private int chasingRange = 10;
         private int attackRange = 1;
-        private int percent = 50;
+        protected int percent = 50;
         public Monster() 
         {
             lifeCount = 100;
@@ -191,7 +191,7 @@ namespace DungeonGame
             }
             return MonsterLocation;
         }
-        public void Attack_OR_Move_Monster(char[,] map, int turncount, Player player)
+        public  void Attack_OR_Move_Monster(char[,] map, int turncount, Player player)
         {
             (int, int) PlayerLoc = player.Current_Location(map, 'P');
             if (turncount % 3 == 0)
@@ -216,7 +216,7 @@ namespace DungeonGame
             }
 
         }//턴에 따라 Attack OR Move
-        private void Monster_Attack(char[,] map, (int, int) PlayerLoc, Player player)
+        public virtual void Monster_Attack(char[,] map, (int, int) PlayerLoc, Player player)
         {
             if (Check_Player(map, PlayerLoc, attackRange))
             {
@@ -229,7 +229,7 @@ namespace DungeonGame
 
             }
         }
-        private void Monster_Random_Move(char[,] map)//상하좌우 랜덤위치 이동
+        public  void Monster_Random_Move(char[,] map)//상하좌우 랜덤위치 이동
         {
 
             int a = rand.Next(1, 5);
@@ -277,7 +277,7 @@ namespace DungeonGame
 
         }
 
-        private void Monster_Move_To_Player(char[,] map, (int, int) playerLoc)
+        public  void Monster_Move_To_Player(char[,] map, (int, int) playerLoc)
         {
 
             if (playerLoc.Item1 > row_Location)
@@ -342,6 +342,20 @@ namespace DungeonGame
             lifeCount = 300;
             attackDamage = 10;
             mark = 'B';
+            percent = 50;
+        }
+
+        public virtual void Monster_Attack(char[,] map, (int, int) PlayerLoc, Player player)
+        {
+            
+            Console.WriteLine("Boss_Monster : 공격!: " + percent);
+            Random ranl = new Random();
+            int kk = ranl.Next(0, 2);
+
+            if (kk == 1) { player.Damaged(attackDamage); }
+            else { Console.WriteLine("Player : 공격 회피!!"); }
+
+            
         }
     }
     public class MapController
@@ -518,7 +532,7 @@ namespace DungeonGame
             }
         }
     }
-    public class DungeonGamek,
+    public class DungeonGame
     {
         string Level = "Easy";
         int stage_count = 3;
