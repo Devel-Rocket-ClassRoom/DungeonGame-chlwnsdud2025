@@ -438,48 +438,47 @@ namespace DungeonGame
         {
             for (int count = 0; count < wallCount; count++)
             {
-                while (true)// 함수로 만들기!
+                
+                Random rand = new Random();
+
+                int a = rand.Next(2, map.GetLength(0) - 3);
+                int b = rand.Next(2, map.GetLength(1) - 3);
+
+                int sid = rand.Next(1, 5);
+
+                if (map[a, b] == ' ' && map[a, b + 1] == ' ' && map[a, b + 2] == ' ' && map[a + 1, b] == ' ' && map[a + 2, b] == ' ')
                 {
-                    Random rand = new Random();
-
-                    int a = rand.Next(2, map.GetLength(0) - 3);
-                    int b = rand.Next(2, map.GetLength(1) - 3);
-
-                    int sid = rand.Next(1, 5);
-
-                    if (map[a, b] == ' ' && map[a, b + 1] == ' ' && map[a, b + 2] == ' ' && map[a + 1, b] == ' ' && map[a + 2, b] == ' ')
+                    switch (sid)
                     {
-                        switch (sid)
-                        {
-                            case 1:
-                                map[a, b] = '#';
-                                map[a, b + 1] = '#';
-                                map[a, b + 2] = '#';
-                                break;
-                            case 2:
-                                map[a, b] = '#';
-                                map[a + 1, b] = '#';
-                                map[a + 2, b] = '#';
-                                break;
-                            case 3:
-                                map[a, b] = '#';
-                                map[a, b + 1] = '#';
-                                map[a + 1, b] = '#';
-                                break;
-                            default:
-                                map[a, b] = '#';
-                                map[a, b + 1] = '#';
-                                map[a + 1, b] = '#';
-                                break;
+                        case 1:
+                            map[a, b] = '#';
+                            map[a, b + 1] = '#';
+                            map[a, b + 2] = '#';
+                            break;
+                        case 2:
+                            map[a, b] = '#';
+                            map[a + 1, b] = '#';
+                            map[a + 2, b] = '#';
+                            break;
+                        case 3:
+                            map[a, b] = '#';
+                            map[a, b + 1] = '#';
+                            map[a + 1, b] = '#';
+                            break;
+                        default:
+                            map[a, b] = '#';
+                            map[a, b + 1] = '#';
+                            map[a + 1, b] = '#';
+                            break;
 
-                        }
-                        break;
                     }
-
-
-
+                   
                 }
-            }
+                else
+                {
+                    count--;
+                }
+        }
 
         }
         public void Door_Generate(char[,] map)
@@ -670,8 +669,6 @@ namespace DungeonGame
 
             return Move_Result.None;
         }
-
-
 
         public void testJson()
         {
