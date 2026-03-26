@@ -518,7 +518,7 @@ namespace DungeonGame
             }
         }
     }
-    public class DungeonGame
+    public class DungeonGamek,
     {
         string Level = "Easy";
         int stage_count = 3;
