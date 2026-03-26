@@ -14,11 +14,6 @@ using static DungeonGame.SaveLoadJson;
 namespace DungeonGame
 {
 
-    public interface IMonster
-    {
-
-
-    }
     public enum Move_Result
     {
         Door,
@@ -26,6 +21,7 @@ namespace DungeonGame
         Monster,
         Wall,
         Move,
+        Clear,
         None
     }
     abstract public class Character
@@ -143,7 +139,7 @@ namespace DungeonGame
     }
 
     
-    public class Monster : Character, IMonster
+    public class Monster : Character
     {
         static Random rand = new Random();
 
@@ -556,38 +552,11 @@ namespace DungeonGame
             while (true)
             {
 
-                Move_Result a = Input_And_UpdateMap(Map2);
+                Move_Result a = Input_And_UpdateMap(ref Map2);
 
-                if (a == Move_Result.Door)
+                if(a == Move_Result.Clear)
                 {
-                    mapManager.mapcount++;
-                    if (mapManager.mapcount >= stage_count)
-                    {
-                        Console.WriteLine("All_Stage_CLear!!");
-                        break;
-                    }
-                    if (mapManager.mapcount >= mapManager.totalMap.Count())
-                    {
-
-                        Map2 = mapManager.CreateMap(Level, monsterGroup, player);
-                        mapManager.totalMap.Add(Map2);
-
-                        JsonMap.test_map = JsonMap.ConvertMap1(Map2);
-                        JsonMap.SaveGameData(JsonMap.test_map);
-
-                        mapManager.PrintMap(Map2);
-                    }
-                    else
-                    {
-                        Map2 = mapManager.totalMap[mapManager.mapcount];
-                        mapManager.PrintMap(Map2);
-                    }
-                }
-                else if (a == Move_Result.Back)
-                {
-                    mapManager.mapcount -= 1;
-                    Map2 = mapManager.totalMap[mapManager.mapcount];
-                    mapManager.PrintMap(Map2);
+                    break;
                 }
 
                 if (player.P_isDead)
@@ -597,7 +566,7 @@ namespace DungeonGame
 
             }
         }
-        public Move_Result Input_And_UpdateMap(char[,] map)
+        public Move_Result Input_And_UpdateMap(ref char[,] map)
         {
             for (int i = 0; i < 2; i++) { Console.WriteLine(); }
 
@@ -632,35 +601,62 @@ namespace DungeonGame
                 monsterGroup[i].Attack_OR_Move_Monster(map, turnCount, player);
             }
 
-            //업데이트
-            if (moveResult == Move_Result.Wall)
+            //결과 업데이트
+            if (moveResult == Move_Result.Wall) // 벽
             {
                 mapManager.PrintMap(map);
                 Console.WriteLine("이동할 수 없습니다.");
             }
-            else if (moveResult == Move_Result.Monster)
+            else if (moveResult == Move_Result.Monster) // 몬스터
             {
 
-                if (moster.Count_Monster(monsterGroup) == 0)
+                if (moster.Count_Monster(monsterGroup) == 0) // 몬스터 다 잡음
                 {
                     mapManager.Door_Generate(map);
                     mapManager.PrintMap(map);
                     Console.WriteLine("Stage_Clear!!");
                 }
-                else
+                else // 몬스터 남음
                 {
                     mapManager.PrintMap(map);
                     Console.WriteLine("남은 적 수 : " + moster.Count_Monster(monsterGroup));
                 }
             }
-            else if (moveResult == Move_Result.Move)
+            else if (moveResult == Move_Result.Move) // 이동
             {
                 mapManager.PrintMap(map);
             }
 
-            if (moveResult == Move_Result.Door || moveResult == Move_Result.Back)
+            if (moveResult == Move_Result.Door) // 출구
             {
-                return moveResult;
+                mapManager.mapcount++;
+                if (mapManager.mapcount >= stage_count) // 마지막 스테이지
+                {
+                    Console.WriteLine("All_Stage_CLear!!");
+                    return Move_Result.Clear;
+                }
+                if (mapManager.mapcount >= mapManager.totalMap.Count()) //List에 저장안된맵은 저장
+                {
+
+                    map = mapManager.CreateMap(Level, monsterGroup, player);
+                    mapManager.totalMap.Add(map);
+
+                    JsonMap.test_map = JsonMap.ConvertMap1(map);
+                    JsonMap.SaveGameData(JsonMap.test_map);
+
+                    mapManager.PrintMap(map);
+                }
+                else// List에 있는 맵은 그냥 불러옴
+                {
+                    map = mapManager.totalMap[mapManager.mapcount];
+                    mapManager.PrintMap(map);
+                }
+            }
+            else if (moveResult == Move_Result.Back) // 입구
+            {
+                mapManager.mapcount -= 1;
+                map = mapManager.totalMap[mapManager.mapcount];
+                mapManager.PrintMap(map);
             }
 
             //다음 턴 예고
@@ -668,39 +664,6 @@ namespace DungeonGame
             else { Console.WriteLine("다음턴은 몬스터 이동 턴!"); }
 
             return Move_Result.None;
-        }
-
-        public void testJson()
-        {
-            list = new List<List<char>>();
-
-            char[,] map = new char[10, 10];
-            for (int i = 0; i < map.GetLength(0); i++)
-            {
-                for (int j = 0; j < map.GetLength(1); j++)
-                {
-                    if (i == 0 || i == map.GetLength(0) - 1 || j == 0 || j == map.GetLength(1) - 1)
-                    {
-                        map[i, j] = '#';
-                    }
-                    else
-                    {
-                        map[i, j] = ' ';
-                    }
-                }
-
-            }
-
-            for (int i = 0; i < map.GetLength(0); i++)
-            {
-                var row = new List<char>();
-                for (int j = 0; j < map.GetLength(1); j++)
-                {
-                    row.Add(map[i, j]);
-                }
-                list.Add(row);
-            }
-
         }
     }
 
@@ -710,7 +673,6 @@ namespace DungeonGame
     {
 
         public List<List<char>> test_map;
-        public char[,] map = new char[20,20];
         GameData gdata = new GameData();
         // 2차원 맵을 List로 바꾸는 함수
         public void MapGenerate()
@@ -814,12 +776,6 @@ namespace DungeonGame
             private List<List<char>> testMap;
             [JsonInclude] private List<List<List<char>>> mapList = new List<List<List<char>>>();
 
-            public GameData()
-            {
-               
-                
-                
-            }
             public void AA(List<List<char>> testMap)
             {
                 this.testMap = testMap;
@@ -835,43 +791,6 @@ namespace DungeonGame
 
             DungeonGame a = new DungeonGame();
             a.PlayGame();
-
-
-
-
-            //a.testJson();
-
-
-            /*
-            Monster m = new Monster();
-            Console.Write("몬스터 이름 입력: ");
-            m.name = Console.ReadLine();
-
-            string folderPath = "./GameData";
-            string filePath = Path.Combine(folderPath, "data.json");
-
-            if (!Directory.Exists(folderPath))
-            {
-                Directory.CreateDirectory(folderPath);
-            }
-            string result = JsonSerializer.Serialize(m, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(filePath, result);
-
-            Console.WriteLine("Json으로 변환된 문자열 : \n" + result);
-            Console.ReadLine();
-
-            string s = File.ReadAllText(filePath);
-            Monster mm = JsonSerializer.Deserialize<Monster>(s);
-            Console.WriteLine("읽기 성공 : " + mm.name);
-        */
-            
-            //SaveLoadJson a = new SaveLoadJson();
-            //a.MapGenerate();
-            //a.SaveGameData();
-            //a.LoadGameData();
-
-
-
 
         }
     }
